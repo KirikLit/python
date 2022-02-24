@@ -15,5 +15,3 @@ w = observation.weather
 n = w.detailed_status
 t = w.temperature('celsius')['temp']
 print("В городе " + place + " сейчас " + n + '\n Температура составляет ' + str(t) + ' градусов по цельсию')
-
-
