@@ -1,1 +1,0 @@
-pyinstaller --onefile -w --add-data "save.dat;." --add-data "icon.ico;." -i icon.ico --clean Project9.py
