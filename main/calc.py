@@ -92,7 +92,7 @@ class CalcWin(Tk):
             self.inti += x
             self.entry.insert(END, x)
             self.lastdigit = self.entry.get()
-
+        print(self.inti)
 
 if __name__ == '__main__':
     app = CalcWin()
