@@ -70,6 +70,7 @@ class CalcWin(Tk):
             sqrt = float(self.entry.get()) ** 0.5
             self.entry.delete(0, END)
             self.entry.insert(0, str(sqrt))
+            self.inti = str(sqrt)
         elif x in divs:
             self.doubleop = False
             self.oper = True
@@ -88,9 +89,9 @@ class CalcWin(Tk):
                 self.inti = x
                 self.entry.delete(0, END)
                 self.entry.insert(0, x)
-                return
-            self.inti += x
-            self.entry.insert(END, x)
+            else:
+                self.inti += x
+                self.entry.insert(END, x)
             self.lastdigit = self.entry.get()
         print(self.inti)
 

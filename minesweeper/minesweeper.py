@@ -18,23 +18,6 @@ class MainWindow(Tk):
         self.frame = Frame(self)
         self.frame.pack(fill=BOTH, padx=20, pady=20)
 
-        self.excl = []
-        self.excl2 = []
-        tvar = 20
-        tvar2 = 20
-
-        for x in range(19, 400):
-            if tvar == 20:
-                self.excl.append(x)
-                tvar = 0
-            tvar += 1
-
-        for x in range(0, 400):
-            if tvar2 == 20:
-                self.excl2.append(x)
-                tvar2 = 0
-            tvar2 += 1
-
         x = 20
 
         # Создание кнопок
@@ -93,6 +76,23 @@ class MyButton:
         self.app = app
         self.opened = None
 
+        self.excl = []
+        self.excl2 = []
+        tvar = 20
+        tvar2 = 20
+
+        for x in range(19, 400):
+            if tvar == 20:
+                self.excl.append(x)
+                tvar = 0
+            tvar += 1
+
+        for x in range(0, 400):
+            if tvar2 == 20:
+                self.excl2.append(x)
+                tvar2 = 0
+            tvar2 += 1
+
         self.btn = Button(disp, width=2, height=1, bg='Lightgray')
         self.btn.bind('<Button-1>', lambda e, f=self, btn=self.btn: self.app.pressed(e, f, self.btn))
         self.btn.bind('<Button-3>', lambda e, obj=self, f=self.btn: self.app.pressed1(e, obj, f))
@@ -101,9 +101,7 @@ class MyButton:
     def check(self):
         if self.mine == 1:
             return
-        if self.index > 20:
-            if self.app.btns[self.index - 21].mine == 1:
-                self.count += 1
+
         if self.index > 19:
             if self.app.btns[self.index - 20].mine == 1:
                 self.count += 1
@@ -120,6 +118,9 @@ class MyButton:
             if self.app.btns[self.index + 1].mine == 1:
                 self.count += 1
         if self.index not in self.excl2:
+            if self.index > 20:
+                if self.app.btns[self.index - 21].mine == 1:
+                    self.count += 1
             if self.index < 380:
                 if self.app.btns[self.index + 19].mine == 1:
                     self.count += 1
