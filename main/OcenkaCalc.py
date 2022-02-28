@@ -35,7 +35,7 @@ def solve():
 window = Tk()
 window.title("Калькулятор среднего балла")
 window.geometry('400x400')
-window.iconbitmap('icon.ico')
+window.iconbitmap('icon2.ico')
 
 lbl = Label(window, text="Вводи свои оценки:", font=("Arial Bold", font))
 lbl.grid(row=0)
