@@ -32,7 +32,7 @@ class MainWindow(Tk):
             btn.index = self.btns.index(btn)
 
         # Создание бомб
-        for bombs in range(45):
+        for bombs in range(70):
             bomb = random.choice(self.btns)
             while bomb in self.bombed:
                 bomb = random.choice(self.btns)
@@ -160,8 +160,9 @@ class MyButton:
             if operation[0]:
                 return True
         elif oper == 2:
-            if operation[1]:
-                return True
+            if index not in self.excl2:
+                if operation[1]:
+                    return True
         elif oper == 3:
             if index not in self.excl:
                 return True
