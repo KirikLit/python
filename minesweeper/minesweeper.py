@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import messagebox
 from PIL import Image, ImageTk
 import random
 
@@ -8,63 +9,178 @@ class MainWindow(Tk):
         super().__init__()
         self.title('Minesweeper')
         self.config(bg='Lightgray')
+        self.resizable(False, False)
+        self.iconbitmap('minecon.ico')
 
         # Загрузка изображений
         flagO = Image.open('minesweeper flag.png')
         self.flag = ImageTk.PhotoImage(flagO.resize((20, 20)))
-
+        
+        # Списки
         self.btns = []
         self.bombed = []
+        self.frames = []
+        self.colors = ['n', 'Blue', 'Green', 'Red', 'Darkgreen', 'Darkred', 'Black', 'Black']       # Цвета кнопок
+        
+        # Пустые переменные
+        self.losegamev = False
+        self.bombcount = None
+        self.btnscount = None
+        self.linelength = None
+        
+        # Стандартные значения
+        self.bombcount2 = 80
+        self.btnscount2 = 480
+        self.linelength2 = 30
+        
+        # Меню
+        menu = Menu(self)
+        newitem = Menu(menu, tearoff=0)
+        newitem.add_command(label='Новичок', command=lambda : self.changegrid(81, 9, 10))
+        newitem.add_command(label='Любитель', command=lambda : self.changegrid(256, 16, 40))
+        newitem.add_command(label='Проффесионал', command=lambda : self.changegrid(480, 30, 80))
+        newitem.add_separator()
+        newitem.add_command(label='Свой размер', command=self.special)
+        menu.add_command(label='Новая игра', command=self.restartgame)
+        menu.add_cascade(label='Сложность', menu=newitem)
+        self.config(menu=menu)
+        
+        # Индикатор бомб
+        self.bomblbl = Label(self, font=('Segoe UI', 15), bg='lightgray')
+        self.bomblbl.pack(pady=5)
+        
+        # Старт игры
+        self.startgame()
+        self.mainloop()
+
+    def startgame(self):
+        # Создание кнопок
+        self.losegamev = False
+        self.bombcount = self.bombcount2
+        self.btnscount = self.btnscount2
+        self.linelength = self.linelength2
+        x = self.linelength
+
         self.frame = Frame(self)
         self.frame.pack(fill=BOTH, padx=20, pady=20)
 
-        x = 20
-
-        # Создание кнопок
-        for y in range(400):
-            if x == 20:
+        for y in range(self.btnscount):
+            if x == self.linelength:
                 fr = Frame(self.frame)
                 fr.pack(fill=X)
+
+                self.frames.append(fr)
                 x = 0
-            btn = MyButton(self, 0, 0, False, fr, 0)
+
+            btn = MyButton(self, 0, 0, False, fr, y)
             x += 1
+
             self.btns.append(btn)
-            btn.index = self.btns.index(btn)
 
         # Создание бомб
-        for bombs in range(70):
+        for bombs in range(self.bombcount):
             bomb = random.choice(self.btns)
+
             while bomb in self.bombed:
                 bomb = random.choice(self.btns)
+
             bomb.mine = 1
             self.bombed.append(bomb)
 
+        self.bombCNT = len(self.bombed)
+        BombText = 'Бомб: ' + str(self.bombCNT)
+        self.bomblbl.config(text=BombText)
+
         # Проверка бомб
         for btn in self.btns:
-            btn.check()
+            btn.check(self)
 
-        self.mainloop()
+    def wingame(self):
+        x = 0
 
-    def pressed(self, event, slf, btn):
-        if slf.mine == 1:
-            slf.btn.config(relief=SUNKEN, state=DISABLED, text='BB', fg='Red', bg='Red', font=('Times Bold', 9))
-        elif slf.count == 0:
-            slf.btn.config(relief=SUNKEN, state=DISABLED, text='', fg='Blue', font=('Times Bold', 9), bg='White')
-            slf.open(self, slf.btn)
+        for btn in self.btns:
+            if btn.mine == 1 and btn.flag:
+                x += 1
+
+        if x == self.bombcount:
+            for btn in self.btns:
+                self.pressed(btn)
+            msg = messagebox.askyesno('Победа', 'Вы выиграли!\nХотите сыграть ещё раз?')
+            if msg:
+                self.restartgame()
+            else:
+                self.destroy()
+
+    def losegame(self):
+        for btn in self.btns:
+            self.pressed(btn)
+        msg = messagebox.askyesno('Поражение', 'Вы проиграли!\nХотите сыграть ещё раз?')
+        if msg:
+            self.restartgame()
         else:
-            slf.btn.config(relief=SUNKEN, state=DISABLED, text=slf.count, fg='Blue', font=('Times Bold', 9), bg='White')
-        slf.btn.unbind('<Button-1>')
-        slf.btn.unbind('<Button-3>')
+            self.destroy()
 
-    def pressed1(self, event, slf, btnn):
-        if slf.flag:
-            slf.btn.config(image='', width=2, height=1)
-            slf.btn.bind('<Button-1>', lambda e, f=slf, btn=slf.btn: self.pressed(e, f, btn))
-            slf.flag = False
-        else:
-            slf.btn.config(image=self.flag, width=18, height=20)
-            slf.btn.unbind('<Button-1>')
-            slf.flag = True
+    def restartgame(self):
+        for btn in self.btns:
+            btn.btn.destroy()
+        for frames in self.frames:
+            frames.destroy()
+        self.btns = []
+        self.bombed = []
+        self.frames = []
+
+        self.frame.destroy()
+        self.startgame()
+
+    def changegrid(self, btns, length, mines):
+        self.bombcount2 = mines
+        self.btnscount2 = btns
+        self.linelength2 = length
+
+        self.restartgame()
+
+    def special(self):
+        SP = SpecialSize(self)
+
+    def pressed(self, slf):
+        if not slf.opened:
+            if self.losegamev or not slf.flag:
+                if slf.mine == 1:
+                    slf.btn.config(relief=SUNKEN, text='BB', fg='Darkred', bg='Red', font=('Times Bold', 9))
+                    if not self.losegamev:
+                        self.bomblbl.config(text='Вы проиграли!')
+                        self.losegamev = True
+                        self.losegame()
+                elif slf.count == 0:
+                    slf.btn.config(relief=SUNKEN, text='', fg='Blue', bg='White',font=('Times Bold', 9),
+                                   image='', width=2, height=1)
+                    if not self.losegamev:
+                        slf.open(self, slf.btn)
+                else:
+                    slf.btn.config(relief=SUNKEN, text=slf.count, fg=self.colors[slf.count],  bg='White', font=('Times Bold', 9),
+                                   image='', width=2, height=1)
+                slf.opened = True
+
+    def pressed1(self, event, slf):
+        if not slf.opened:
+            if slf.flag:
+                slf.btn.config(image='', width=2, height=1)
+
+                self.bombCNT += 1
+                BombText = 'Бомб: ' + str(self.bombCNT)
+                self.bomblbl.config(text=BombText)
+
+                slf.flag = False
+            elif not slf.flag and self.bombCNT > -1:
+                slf.btn.config(image=self.flag, width=18, height=20)
+
+                self.bombCNT -= 1
+                BombText = 'Бомб: ' + str(self.bombCNT)
+                self.bomblbl.config(text=BombText)
+
+                slf.flag = True
+            if self.bombCNT == 0:
+                self.wingame()
 
 
 class MyButton:
@@ -74,64 +190,50 @@ class MyButton:
         self.flag = flag
         self.index = index
         self.app = app
-        self.opened = None
+        self.opened = False
 
         self.excl = []
         self.excl2 = []
-        tvar = 20
-        tvar2 = 20
+        index = self.index
+        self.pos = [index - (self.app.linelength - 1), index - self.app.linelength, index - (self.app.linelength + 1),
+                    index + 1, index - 1, index + self.app.linelength, index + (self.app.linelength + 1),
+                    index + (self.app.linelength - 1)]
+        tvar = self.app.linelength
+        tvar2 = self.app.linelength
 
-        for x in range(19, 400):
-            if tvar == 20:
+        for x in range(self.app.linelength - 1, self.app.btnscount):
+            if tvar == self.app.linelength:
                 self.excl.append(x)
                 tvar = 0
             tvar += 1
 
-        for x in range(0, 400):
-            if tvar2 == 20:
+        for x in range(0, self.app.btnscount):
+            if tvar2 == app.linelength:
                 self.excl2.append(x)
                 tvar2 = 0
             tvar2 += 1
 
-        self.btn = Button(disp, width=2, height=1, bg='Lightgray')
-        self.btn.bind('<Button-1>', lambda e, f=self, btn=self.btn: self.app.pressed(e, f, self.btn))
-        self.btn.bind('<Button-3>', lambda e, obj=self, f=self.btn: self.app.pressed1(e, obj, f))
+        self.btn = Button(disp, width=2, height=1, bg='Lightgray', command=lambda f=self: self.app.pressed(f))
+        self.btn.bind('<Button-3>', lambda e, obj=self: self.app.pressed1(e, obj))
         self.btn.pack(side=LEFT)
 
-    def check(self):
+    def check(self, app):
+        index = self.index
+
         if self.mine == 1:
             return
-
-        if self.index > 19:
-            if self.app.btns[self.index - 20].mine == 1:
-                self.count += 1
-        if self.index < 380:
-            if self.app.btns[self.index + 20].mine == 1:
-                self.count += 1
-        if self.index not in self.excl:
-            if self.index > 19:
-                if self.app.btns[self.index - 19].mine == 1:
+        for posi in self.pos:
+            oper = self.pos.index(posi)
+            if self.checking(index, oper):
+                slf = app.btns[posi]
+                if slf.mine == 1:
                     self.count += 1
-            if self.index < 379:
-                if self.app.btns[self.index + 21].mine == 1:
-                    self.count += 1
-            if self.app.btns[self.index + 1].mine == 1:
-                self.count += 1
-        if self.index not in self.excl2:
-            if self.index > 20:
-                if self.app.btns[self.index - 21].mine == 1:
-                    self.count += 1
-            if self.index < 380:
-                if self.app.btns[self.index + 19].mine == 1:
-                    self.count += 1
-            if self.app.btns[self.index - 1].mine == 1:
-                self.count += 1
 
     def open(self, app, btn):
         index = self.index
-        pos = [index - 19, index - 20, index - 21, index + 1, index - 1, index + 20, index + 21, index + 19]
-        for posi in pos:
-            oper = pos.index(posi)
+
+        for posi in self.pos:
+            oper = self.pos.index(posi)
 
             if self.checking(index, oper):
                 slf = app.btns[posi]
@@ -139,48 +241,95 @@ class MyButton:
                     if slf.mine == 1:
                         pass
                     elif slf.count == 0:
-                        slf.btn.config(relief=SUNKEN, state=DISABLED, text='', fg='Blue', font=('Times Bold', 9),
-                                       bg='White')
+                        slf.btn.config(relief=SUNKEN, text='', fg='Blue', font=('Times Bold', 9), bg='White')
                         slf.opened = True
                         slf.open(app, btn)
                     else:
-                        slf.btn.config(relief=SUNKEN, state=DISABLED, text=slf.count, fg='Blue', font=('Times Bold', 9),
-                                       bg='White')
-                    slf.btn.unbind('<Button-1>')
-                    slf.btn.unbind('<Button-3>')
+                        slf.btn.config(relief=SUNKEN, text=slf.count, fg=app.colors[slf.count], font=('Times Bold', 9), bg='White')
+                        slf.opened = True
 
     def checking(self, index, oper):
-        operation = [index > 19, index > 20, index < 380]
+        operation = [index > (self.app.linelength - 1), index > self.app.linelength,
+                     index < (self.app.btnscount - self.app.linelength)]
 
-        if oper == 0:
-            if index not in self.excl:
-                if operation[0]:
-                    return True
-        elif oper == 1:
+        if oper == 0 and index not in self.excl:
             if operation[0]:
                 return True
-        elif oper == 2:
-            if index not in self.excl2:
-                if operation[1]:
-                    return True
-        elif oper == 3:
-            if index not in self.excl:
+        elif oper == 1 and operation[0]:
+            return True
+        elif oper == 2 and index not in self.excl2:
+            if operation[1]:
                 return True
-        elif oper == 4:
-            if index not in self.excl2:
-                return True
-        elif oper == 5:
+        elif oper == 3 and index not in self.excl:
+            return True
+        elif oper == 4 and index not in self.excl2:
+            return True
+        elif oper == 5 and operation[2]:
+            return True
+        elif oper == 6 and index not in self.excl:
             if operation[2]:
                 return True
-        elif oper == 7:
+            else:
+                return False
+        elif oper == 7 and index not in self.excl2:
             if operation[2]:
                 return True
-        elif oper == 6:
-            if index not in self.excl:
-                if index < 189:
-                    return True
+            else:
+                return False
         else:
             return False
+
+
+class SpecialSize(Toplevel):
+    def __init__(self, app):
+        super().__init__()
+        self.title('Изменение размера')
+        self.resizable(False, False)
+        self.app = app
+        self.iconbitmap('minecon.ico')
+
+        fr0 = Frame(self)
+        fr0.pack(pady=10, padx=10, expand=True)
+
+        fr1 = Frame(fr0)
+        fr2 = Frame(fr0)
+        fr3 = Frame(fr0)
+
+        lbl1 = Label(fr1, font=('Segoe UI', 12), text='Ширина:')
+        lbl2 = Label(fr2, font=('Segoe UI', 12), text='Высота:')
+        lbl3 = Label(fr3, font=('Segoe UI', 12), text='Мины:')
+        self.lblEr = Label(self, font=('Segoe UI', 12), text='', fg='Red')
+        entBut = Button(self, text='OK', command=self.enter, width=10)
+
+        self.entry1 = Entry(fr1, width=15, font=('Segoe UI', 12))
+        self.entry2 = Entry(fr2, width=15, font=('Segoe UI', 12))
+        self.entry3 = Entry(fr3, width=15, font=('Segoe UI', 12))
+
+        fr1.pack(fill=X)
+        lbl1.pack(side=LEFT)
+        self.entry1.pack(side=RIGHT)
+
+        fr2.pack(fill=X, pady=10)
+        lbl2.pack(side=LEFT)
+        self.entry2.pack(side=RIGHT)
+
+        fr3.pack(fill=X)
+        lbl3.pack(side=LEFT)
+        self.entry3.pack(side=RIGHT)
+        
+        entBut.pack(side=RIGHT, padx=5, pady=5)
+        self.lblEr.pack(side=LEFT, padx=5, pady=5)
+
+    def enter(self):
+        x1 = int(self.entry1.get())
+        x2 = int(self.entry2.get())
+        x3 = int(self.entry3.get())
+
+        if (x1 * x2) > x3:
+            self.app.changegrid((x1 * x2), x1, x3)
+            self.destroy()
+        else:
+            self.lblEr.config(text='Много бомб')
 
 
 if __name__ == '__main__':
