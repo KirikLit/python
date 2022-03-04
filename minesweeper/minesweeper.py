@@ -20,6 +20,8 @@ class MainWindow(Tk):
         self.btns = []
         self.bombed = []
         self.frames = []
+        self.excl = []
+        self.excl2 = []
         self.colors = ['n', 'Blue', 'Green', 'Red', 'Darkgreen', 'Darkred', 'Black', 'Black']       # Цвета кнопок
         
         # Пустые переменные
@@ -61,6 +63,11 @@ class MainWindow(Tk):
         self.linelength = self.linelength2
         x = self.linelength
 
+        self.excl = []
+        self.excl2 = []
+        tvar = self.linelength
+        tvar2 = self.linelength
+
         self.frame = Frame(self)
         self.frame.pack(fill=BOTH, padx=20, pady=20)
 
@@ -91,6 +98,19 @@ class MainWindow(Tk):
         BombText = 'Бомб: ' + str(self.bombCNT)
         self.bomblbl.config(text=BombText)
 
+        # Создание нужных списков
+        for x in range(self.linelength - 1, self.btnscount):
+            if tvar == self.linelength:
+                self.excl.append(x)
+                tvar = 0
+            tvar += 1
+
+        for x in range(0, self.btnscount):
+            if tvar2 == self.linelength:
+                self.excl2.append(x)
+                tvar2 = 0
+            tvar2 += 1
+
         # Проверка бомб
         for btn in self.btns:
             btn.check(self)
@@ -104,7 +124,7 @@ class MainWindow(Tk):
 
         if x == self.bombcount:
             for btn in self.btns:
-                self.pressed(btn)
+                btn.pressed()
             msg = messagebox.askyesno('Победа', 'Вы выиграли!\nХотите сыграть ещё раз?')
             if msg:
                 self.restartgame()
@@ -113,7 +133,7 @@ class MainWindow(Tk):
 
     def losegame(self):
         for btn in self.btns:
-            self.pressed(btn)
+            btn.pressed()
         msg = messagebox.askyesno('Поражение', 'Вы проиграли!\nХотите сыграть ещё раз?')
         if msg:
             self.restartgame()
@@ -142,46 +162,6 @@ class MainWindow(Tk):
     def special(self):
         SP = SpecialSize(self)
 
-    def pressed(self, slf):
-        if not slf.opened:
-            if self.losegamev or not slf.flag:
-                if slf.mine == 1:
-                    slf.btn.config(relief=SUNKEN, text='BB', fg='Darkred', bg='Red', font=('Times Bold', 9))
-                    if not self.losegamev:
-                        self.bomblbl.config(text='Вы проиграли!')
-                        self.losegamev = True
-                        self.losegame()
-                elif slf.count == 0:
-                    slf.btn.config(relief=SUNKEN, text='', fg='Blue', bg='White',font=('Times Bold', 9),
-                                   image='', width=2, height=1)
-                    if not self.losegamev:
-                        slf.open(self, slf.btn)
-                else:
-                    slf.btn.config(relief=SUNKEN, text=slf.count, fg=self.colors[slf.count],  bg='White', font=('Times Bold', 9),
-                                   image='', width=2, height=1)
-                slf.opened = True
-
-    def pressed1(self, event, slf):
-        if not slf.opened:
-            if slf.flag:
-                slf.btn.config(image='', width=2, height=1)
-
-                self.bombCNT += 1
-                BombText = 'Бомб: ' + str(self.bombCNT)
-                self.bomblbl.config(text=BombText)
-
-                slf.flag = False
-            elif not slf.flag and self.bombCNT > -1:
-                slf.btn.config(image=self.flag, width=18, height=20)
-
-                self.bombCNT -= 1
-                BombText = 'Бомб: ' + str(self.bombCNT)
-                self.bomblbl.config(text=BombText)
-
-                slf.flag = True
-            if self.bombCNT == 0:
-                self.wingame()
-
 
 class MyButton:
     def __init__(self, app, mine, count, flag, disp, index):
@@ -192,29 +172,13 @@ class MyButton:
         self.app = app
         self.opened = False
 
-        self.excl = []
-        self.excl2 = []
         index = self.index
         self.pos = [index - (self.app.linelength - 1), index - self.app.linelength, index - (self.app.linelength + 1),
                     index + 1, index - 1, index + self.app.linelength, index + (self.app.linelength + 1),
                     index + (self.app.linelength - 1)]
-        tvar = self.app.linelength
-        tvar2 = self.app.linelength
 
-        for x in range(self.app.linelength - 1, self.app.btnscount):
-            if tvar == self.app.linelength:
-                self.excl.append(x)
-                tvar = 0
-            tvar += 1
-
-        for x in range(0, self.app.btnscount):
-            if tvar2 == app.linelength:
-                self.excl2.append(x)
-                tvar2 = 0
-            tvar2 += 1
-
-        self.btn = Button(disp, width=2, height=1, bg='Lightgray', command=lambda f=self: self.app.pressed(f))
-        self.btn.bind('<Button-3>', lambda e, obj=self: self.app.pressed1(e, obj))
+        self.btn = Button(disp, width=2, height=1, bg='Lightgray', command=self.pressed)
+        self.btn.bind('<Button-3>', lambda e: self.pressed1(e))
         self.btn.pack(side=LEFT)
 
     def check(self, app):
@@ -229,49 +193,99 @@ class MyButton:
                 if slf.mine == 1:
                     self.count += 1
 
-    def open(self, app, btn):
-        index = self.index
+    def pressed(self):
+        if not self.opened:
+            if self.app.losegamev or not self.flag:
+                if self.mine == 1:
+                    self.btn.config(relief=SUNKEN, text='BB', fg='Darkred', bg='Red', font=('Times Bold', 9))
+                    if not self.app.losegamev:
+                        self.app.bomblbl.config(text='Вы проиграли!')
+                        self.app.losegamev = True
+                        self.app.losegame()
+                elif self.flag:
+                    self.btn.config(relief=SUNKEN, state=DISABLED)
+                elif self.count == 0:
+                    self.btn.config(relief=SUNKEN, text='', fg='Blue', bg='White',font=('Times Bold', 9),
+                                    image='', width=2, height=1)
+                    if not self.app.losegamev:
+                        self.open()
+                else:
+                    self.btn.config(relief=SUNKEN, text=self.count, fg=self.app.colors[self.count],  bg='White',
+                                    font=('Times Bold', 9), image='', width=2, height=1)
+                self.opened = True
+        else:
+            for pos in self.pos:
+                oper = self.pos.index(pos)
 
+                if self.checking(self.index, oper):
+                    slf = self.app.btns[pos]
+                    if not slf.opened:
+                        slf.pressed()
+                        if slf.mine == 1 and not slf.flag:
+                            break
+
+    def pressed1(self, event):
+        if not self.opened:
+            if self.flag:
+                self.btn.config(image='', width=2, height=1)
+
+                self.app.bombCNT += 1
+                BombText = 'Бомб: ' + str(self.app.bombCNT)
+                self.app.bomblbl.config(text=BombText)
+
+                self.flag = False
+            elif not self.flag and self.app.bombCNT > -1:
+                self.btn.config(image=self.app.flag, width=18, height=20)
+
+                self.app.bombCNT -= 1
+                BombText = 'Бомб: ' + str(self.app.bombCNT)
+                self.app.bomblbl.config(text=BombText)
+
+                self.flag = True
+            if self.app.bombCNT == 0:
+                self.app.wingame()
+
+    def open(self):
         for posi in self.pos:
             oper = self.pos.index(posi)
 
-            if self.checking(index, oper):
-                slf = app.btns[posi]
+            if self.checking(self.index, oper):
+                slf = self.app.btns[posi]
                 if not slf.opened:
                     if slf.mine == 1:
                         pass
                     elif slf.count == 0:
                         slf.btn.config(relief=SUNKEN, text='', fg='Blue', font=('Times Bold', 9), bg='White')
                         slf.opened = True
-                        slf.open(app, btn)
+                        slf.open()
                     else:
-                        slf.btn.config(relief=SUNKEN, text=slf.count, fg=app.colors[slf.count], font=('Times Bold', 9), bg='White')
+                        slf.btn.config(relief=SUNKEN, text=slf.count, fg=self.app.colors[slf.count], font=('Times Bold', 9), bg='White')
                         slf.opened = True
 
     def checking(self, index, oper):
         operation = [index > (self.app.linelength - 1), index > self.app.linelength,
                      index < (self.app.btnscount - self.app.linelength)]
 
-        if oper == 0 and index not in self.excl:
+        if oper == 0 and index not in self.app.excl:
             if operation[0]:
                 return True
         elif oper == 1 and operation[0]:
             return True
-        elif oper == 2 and index not in self.excl2:
+        elif oper == 2 and index not in self.app.excl2:
             if operation[1]:
                 return True
-        elif oper == 3 and index not in self.excl:
+        elif oper == 3 and index not in self.app.excl:
             return True
-        elif oper == 4 and index not in self.excl2:
+        elif oper == 4 and index not in self.app.excl2:
             return True
         elif oper == 5 and operation[2]:
             return True
-        elif oper == 6 and index not in self.excl:
+        elif oper == 6 and index not in self.app.excl:
             if operation[2]:
                 return True
             else:
                 return False
-        elif oper == 7 and index not in self.excl2:
+        elif oper == 7 and index not in self.app.excl2:
             if operation[2]:
                 return True
             else:
@@ -299,7 +313,8 @@ class SpecialSize(Toplevel):
         lbl2 = Label(fr2, font=('Segoe UI', 12), text='Высота:')
         lbl3 = Label(fr3, font=('Segoe UI', 12), text='Мины:')
         self.lblEr = Label(self, font=('Segoe UI', 12), text='', fg='Red')
-        entBut = Button(self, text='OK', command=self.enter, width=10)
+        entBut = Button(self, text='OK', command=lambda: self.enter('e'), width=10)
+        self.bind('<Return>', self.enter)
 
         self.entry1 = Entry(fr1, width=15, font=('Segoe UI', 12))
         self.entry2 = Entry(fr2, width=15, font=('Segoe UI', 12))
@@ -320,14 +335,17 @@ class SpecialSize(Toplevel):
         entBut.pack(side=RIGHT, padx=5, pady=5)
         self.lblEr.pack(side=LEFT, padx=5, pady=5)
 
-    def enter(self):
+    def enter(self, event):
         x1 = int(self.entry1.get())
         x2 = int(self.entry2.get())
         x3 = int(self.entry3.get())
 
         if (x1 * x2) > x3:
-            self.app.changegrid((x1 * x2), x1, x3)
-            self.destroy()
+            if x1 > 2 and x2 < 40:
+                self.app.changegrid((x1 * x2), x1, x3)
+                self.destroy()
+            else:
+                self.lblEr.config(text='Неправильный размер')
         else:
             self.lblEr.config(text='Много бомб')
 
