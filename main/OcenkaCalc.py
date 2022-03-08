@@ -6,6 +6,7 @@ rightargs = ['1', '2', '3', '4', '5']
 
 font = 18
 
+
 def clicked():
     if txt.get() in rightargs:
         numbers.append(int(txt.get()))

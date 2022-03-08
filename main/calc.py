@@ -67,7 +67,7 @@ class CalcWin(Tk):
 
         if x == 'C':
             self.inti = '0'
-            self.print(self.entry2, '0')
+            self.printi(self.entry2, '0')
             self.lastdigit = '0'
         elif x == '=':
             if self.oper:
@@ -76,19 +76,19 @@ class CalcWin(Tk):
                 self.inti += self.lastdigit
                 self.doubleop = True
             res = eval(self.inti)
-            self.print(self.entry2, str(res))
+            self.printi(self.entry2, str(res))
             self.inti = str(res)
             self.oper = True
             self.doubleop = True
         elif x == '√':
             sqrt = float(self.entry2.get()) ** 0.5
-            self.print(self.entry2, str(sqrt))
+            self.printi(self.entry2, str(sqrt))
             self.inti = str(sqrt)
         elif x in divs:
             self.doubleop = False
             self.oper = True
             res = eval(self.inti)
-            self.print(self.entry2, res)
+            self.printi(self.entry2, res)
             self.inti = str(res)
             self.lastoper = x
             self.inti += x
@@ -101,17 +101,17 @@ class CalcWin(Tk):
                     self.lastdigit = '0'
             if self.inti == '0':
                 self.inti = x
-                self.print(self.entry2, x)
+                self.printi(self.entry2, x)
             else:
                 self.inti += x
                 self.entry2.config(state=NORMAL)
                 self.entry2.insert(END, x)
                 self.entry2.config(state=DISABLED)
             self.lastdigit = self.entry2.get()
-        self.print(self.entry, self.inti)
+        self.printi(self.entry, self.inti)
         print(self.inti)
 
-    def print(self, entry, text):
+    def printi(self, entry, text):
         entry.config(state=NORMAL)
         entry.delete(0, END)
         entry.insert(0, text)

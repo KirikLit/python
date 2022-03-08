@@ -7,12 +7,13 @@ bot = telebot.TeleBot('5144155625:AAGSPXWLydSWlZDQSo5ZPjRnH3pHN1DpOCA')
 @bot.message_handler(content_types=['text'])
 
 if message.text == 'Привет':
-    start_messa
+    start_message()
 
 def start_message(message):
     if message.text == 'Привет':
         bot.send_message(message.chat.id,"Привет!\n\nНапиши \"Команды\" что бы узнать, что я могу")
     else:
+        pass
 
 @bot.message_handler(content_types=['text'])
 
