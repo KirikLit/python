@@ -7,13 +7,14 @@ import random
 class MainWindow(Tk):
     def __init__(self):
         super().__init__()
+        self.bombCNT = None
         self.title('Minesweeper')
         self.config(bg='Lightgray')
         self.resizable(False, False)
         self.iconbitmap('minecon.ico')
 
         # Загрузка изображений
-        flagO = Image.open('minesweeper flag.png')
+        flagO = Image.open('flag.png')
         self.flag = ImageTk.PhotoImage(flagO.resize((20, 20)))
         
         # Списки
@@ -38,9 +39,9 @@ class MainWindow(Tk):
         # Меню
         menu = Menu(self)
         newitem = Menu(menu, tearoff=0)
-        newitem.add_command(label='Новичок', command=lambda : self.changegrid(81, 9, 10))
-        newitem.add_command(label='Любитель', command=lambda : self.changegrid(256, 16, 40))
-        newitem.add_command(label='Проффесионал', command=lambda : self.changegrid(480, 30, 80))
+        newitem.add_command(label='Новичок', command=lambda: self.changegrid(81, 9, 10))
+        newitem.add_command(label='Любитель', command=lambda: self.changegrid(256, 16, 40))
+        newitem.add_command(label='Проффесионал', command=lambda: self.changegrid(480, 30, 80))
         newitem.add_separator()
         newitem.add_command(label='Свой размер', command=self.special)
         menu.add_command(label='Новая игра', command=self.restartgame)
@@ -160,16 +161,16 @@ class MainWindow(Tk):
         self.restartgame()
 
     def special(self):
-        SP = SpecialSize(self)
+        SpecialSize(self)
 
 
 class MyButton:
-    def __init__(self, app, mine, count, flag, disp, index):
+    def __init__(self, appb, mine, count, flag, disp, index):
         self.mine = mine
         self.count = count
         self.flag = flag
         self.index = index
-        self.app = app
+        self.app = appb
         self.opened = False
 
         index = self.index
@@ -181,7 +182,7 @@ class MyButton:
         self.btn.bind('<Button-3>', lambda e: self.pressed1(e))
         self.btn.pack(side=LEFT)
 
-    def check(self, app):
+    def check(self, appch):
         index = self.index
 
         if self.mine == 1:
@@ -189,7 +190,7 @@ class MyButton:
         for posi in self.pos:
             oper = self.pos.index(posi)
             if self.checking(index, oper):
-                slf = app.btns[posi]
+                slf = appch.btns[posi]
                 if slf.mine == 1:
                     self.count += 1
 
@@ -205,7 +206,7 @@ class MyButton:
                 elif self.flag:
                     self.btn.config(relief=SUNKEN, state=DISABLED)
                 elif self.count == 0:
-                    self.btn.config(relief=SUNKEN, text='', fg='Blue', bg='White',font=('Times Bold', 9),
+                    self.btn.config(relief=SUNKEN, text='', fg='Blue', bg='White', font=('Times Bold', 9),
                                     image='', width=2, height=1)
                     if not self.app.losegamev:
                         self.open()
@@ -216,7 +217,6 @@ class MyButton:
         else:
             for pos in self.pos:
                 oper = self.pos.index(pos)
-
                 if self.checking(self.index, oper):
                     slf = self.app.btns[pos]
                     if not slf.opened:
@@ -259,7 +259,8 @@ class MyButton:
                         slf.opened = True
                         slf.open()
                     else:
-                        slf.btn.config(relief=SUNKEN, text=slf.count, fg=self.app.colors[slf.count], font=('Times Bold', 9), bg='White')
+                        slf.btn.config(relief=SUNKEN, text=slf.count, fg=self.app.colors[slf.count],
+                                       font=('Times Bold', 9), bg='White')
                         slf.opened = True
 
     def checking(self, index, oper):
@@ -295,11 +296,11 @@ class MyButton:
 
 
 class SpecialSize(Toplevel):
-    def __init__(self, app):
+    def __init__(self, appm):
         super().__init__()
         self.title('Изменение размера')
         self.resizable(False, False)
-        self.app = app
+        self.app = appm
         self.iconbitmap('minecon.ico')
 
         fr0 = Frame(self)

@@ -11,4 +11,6 @@
 /Project9/venv/
 /minesweeper/minesweeper_test.py/
 /minesweeper/.idea/
-/Exe Projects/
+/minesweeper/minesweeper.spec
+/minesweeper/dist/
+/minesweeper/build/
