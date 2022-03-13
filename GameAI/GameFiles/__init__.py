@@ -1,2 +1,3 @@
-from GameAI.GameFiles.AI import GaMer
-from GameAI.GameFiles.Game import Game
+from .Game import Game
+from .AI import GaMer
+from .TestGameAI import GameTest

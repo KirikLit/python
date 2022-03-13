@@ -40,4 +40,4 @@ class GaMer:
 
 
 if __name__ == '__main__':
-    print('Это модуль для другой программы\nОткрой GameWithAI.py')
+    print('Это модуль для другой программы\nОткрой TestGameAI.py')

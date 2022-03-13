@@ -1,4 +1,5 @@
 from tkinter import *
+import tkinter.ttk as ttk
 
 
 class CalcWin(Tk):
@@ -8,11 +9,15 @@ class CalcWin(Tk):
         self.config(bg='LightGray')
         self.iconbitmap('icon2.ico')
 
-        XXX = 0
-        CCC = 2
+        ttk.Style().configure('TButton', width=6, font=('Segoe UI', 18))
+        ttk.Style().configure('Extr.TButton', width=13, font=('Segoe UI', 18))
+        ttk.Style().configure('TEntry')
+        ttk.Style().map('TEntry', foreground=[('disabled', 'black')], background=[('disabled', 'white')])
+
+        XXX = 4
         btns = ['1', '2', '3', '+', '4', '5', '6', '-',
                 '7', '8', '9', '*', '0', '.', '/', '=', 'C', '√']
-        binds = ['<Button-Num_1']
+
         self.inti = '0'
         self.disp = '0'
         self.oper = False
@@ -21,16 +26,16 @@ class CalcWin(Tk):
         self.lastdigit = None
         self.font = 'Segoe UI', 12
 
-        for XX in range(0, 7):
-            self.rowconfigure(XX, pad=5)
-            self.columnconfigure(XX, pad=5)
+        fr1 = Frame(self)
+        fr2 = Frame(self)
 
-        self.entry = Entry(self, font=self.font, width=36, disabledbackground='White', disabledforeground='Black')
-        self.entry2 = Entry(self, font=self.font, takefocus=True, width=36, disabledbackground='White',
-                            disabledforeground='Black')
+        self.entry = ttk.Entry(fr1, font=('Segoe UI', 20))
+        self.entry2 = ttk.Entry(fr2, font=('Segoe UI', 20))
 
-        self.entry.grid(row=0, column=0, columnspan=4)
-        self.entry2.grid(row=1, column=0, columnspan=4)
+        fr1.pack(fill=X)
+        self.entry.pack(fill=X, padx=6, pady=6)
+        fr2.pack(fill=X)
+        self.entry2.pack(fill=X, padx=6, pady=6)
 
         self.entry.insert(0, '0')
         self.entry2.insert(0, '0')
@@ -39,26 +44,28 @@ class CalcWin(Tk):
         self.entry2.config(state=DISABLED)
 
         for btn in btns:
-            x = Button(self, text=btn, command=lambda z=btn: self.pressed('e', z), width=10, height=2)
             extrbtn = ['=', '0']
 
             if XXX == 4:
                 XXX = 0
-                CCC += 1
+                fr = Frame(self)
+                fr.pack(fill=BOTH, expand=True)
 
             if btn in extrbtn:
                 if btn == '=':
                     self.bind('<Return>', lambda e, z=btn: self.pressed(e, z))
                 else:
                     self.bind(str(btn), lambda e, z=btn: self.pressed(e, z))
-                x.config(width=22)
-                x.grid(row=CCC, column=XXX, columnspan=2)
+
+                x = ttk.Button(fr, text=btn, command=lambda z=btn: self.pressed('e', z), style='Extr.TButton')
                 XXX += 2
             else:
                 if btn != '√':
                     self.bind(str(btn), lambda e, z=btn: self.pressed(e, z))
-                x.grid(row=CCC, column=XXX)
+                    
+                x = ttk.Button(fr, text=btn, command=lambda z=btn: self.pressed('e', z))
                 XXX += 1
+            x.pack(side=LEFT, pady=3, padx=3, fill=BOTH, expand=TRUE)
 
         self.mainloop()
 
@@ -115,7 +122,7 @@ class CalcWin(Tk):
         entry.config(state=NORMAL)
         entry.delete(0, END)
         entry.insert(0, text)
-        entry.config(state=NORMAL)
+        entry.config(state=DISABLED)
 
 
 if __name__ == '__main__':

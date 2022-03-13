@@ -1,302 +1,336 @@
 from tkinter import *
 from tkinter import messagebox
-from tkinter.ttk import Combobox
+import tkinter.ttk as ttk
 import random
 import pickle
 import sys
 
-class Question():
-    def __init__(self, QText, answ):
-        self.QText = QText
+
+class Question:
+    def __init__(self, qtext, answ):
+        self.QText = qtext
         self.answ = answ
 
-def quePrint():
-    global Que, mode
 
-    if len(Quest) == len(answered):
-        Vexit()
-        mode = 3
-    else:
-        Que = random.choice(Quest)
+class MainWindow(Tk):
+    def __init__(self):
+        super().__init__()
+        # Параметры окна
+        self.geometry('360x500')
+        self.minsize(360, 500)
+        self.title('Игра: Викторина!')
+        self.iconbitmap('icon.ico')
 
-        while Que in answered:
-            Que = random.choice(Quest)
+        # Некоторые переменные
+        self.Quest = []
+        self.que = None
+        self.lastcombo = None
+        self.answer = IntVar()
+        self.answered = []
+        self.score = 0
+        self.combo1 = 'Автопроверка'
+        self.combo2 = 'Проверка в конце'
+        self.combo3 = 'Режим отладки'
+        self.answrd = 0
+        self.mode = 0  # Режимы: 0 - стартовое меню, 1 - игра, 2 - создание вопроса, 3 - Финальное меню, 4 - редакт.
 
-        txt.delete(1.0, END)
-        txt.insert(0.0, Que.QText)
-        mainFrame()
+        # Styles
+        st = ttk.Style()
+        st.configure('TButton', font=('Segoe UI', 16))
+        st.configure('start.TButton', font=('Segoe UI', 20))
+        st.map('answ.TButton',
+               background=[('active', 'lightgray'), ('!active', 'gray')])
+        st.map('start.TButton',
+               background=[('active', 'white'), ('!active', 'red')],
+               foreground=[('active', 'darkred'), ('!active', 'red')])
+        st.map('rest.TButton',
+               background=[('!active', 'green')],
+               foreground=[('!active', 'green'), ('active', 'darkgreen')])
+        st.configure('rest.TButton')
+        st.configure('TRadiobutton', font=('Segoe UI', 18))
 
-def check():
-    global score, answrd
+        # Frames
+        self.fr1 = Frame(self)
+        self.fr2 = Frame(self)
+        self.fr3 = Frame(self)
+        self.fr4 = Frame(self)
+        self.fr5 = Frame(self)
+        self.fr6 = Frame(self)
 
-    x = answer.get()
-    com = combo.get()
+        # Elements
+        self.rad1 = ttk.Radiobutton(self.fr1, text='Вариант А', value=1, variable=self.answer)
+        self.rad2 = ttk.Radiobutton(self.fr1, text='Вариант Б', value=2, variable=self.answer)
+        self.rad3 = ttk.Radiobutton(self.fr2, text='Вариант В', value=3, variable=self.answer)
+        self.rad4 = ttk.Radiobutton(self.fr2, text='Вариант Г', value=4, variable=self.answer)
 
-    if com == combo1:
-        if x == Que.answ:
-            answText.config(fg='green', text='Молодец!', font=("Arial Bold", 14))
-            answered.append(Que)
-            score += 20
-            quePrint()
+        self.txt = Text(self.fr3, height=11, font=('Segoe', 16))
+        self.btnAnsw = ttk.Button(self.fr4, style='answ.TButton', text='Проверить', command=self.check)
+        self.startBut = ttk.Button(self.fr6, style='start.TButton', text='Нажми для начала!', command=self.start)
+        self.returnBut = ttk.Button(self, style='rest.TButton', text='Главное меню', command=self.restart, width=24)
+        self.answText = Label(self.fr4, font=("Arial Bold", 14), fg='Gray', text='Начинаем!')
+        self.FinishLbl = Label(self)
+        self.autorLbl = Label(self.fr5, text='©Kirill Litvinov 2022', font=('Segoe UI', 10))
+
+        self.combo = ttk.Combobox(self.fr6, font=('Segoe UI', 12))
+        self.combo['values'] = (self.combo1, self.combo2, self.combo3)
+        self.combo.current(0)
+
+        # Menu
+        menu = Menu(self)
+        new_item = Menu(menu, tearoff=0)
+        new_item.add_command(label='Новый вопрос', command=self.new_que)
+        new_item.add_command(label='Редактировать', command=self.edit)
+        new_item.add_command(label='Удалить вопрос', command=self.delete)
+        menu.add_cascade(label='Вопросы', menu=new_item)
+        menu.add_command(label='Главное меню', command=self.restarti)
+        menu.add_command(label='Выход', command=sys.exit)
+        self.config(menu=menu)
+
+        # Questions
+        self.save('Load')
+
+        self.QueLblTXT = 'Вопросы %i' % len(self.Quest)
+        self.QueLbl = Label(self.fr5, text=self.QueLblTXT, font=('Segoe UI', 10))
+
+        self.start_menu()
+        self.mainloop()
+
+    def start_menu(self):
+        self.mode = 0
+
+        self.fr6.pack(fill=BOTH, pady=100)
+        self.startBut.pack(fill=X, ipady=80, pady=5, padx=30)
+        self.combo.pack()
+
+        self.fr5.pack(fill=X, side=BOTTOM)
+        self.autorLbl.pack(side=LEFT, padx=5)
+        self.QueLbl.pack(side=RIGHT, padx=5)
+
+    def start(self):
+        self.mode = 1
+        com = self.combo.get()
+
+        if com == self.combo3:
+            self.answText.config(text='Режим отладки', fg='Gray')
+            self.btnAnsw.config(text='Далее')
         else:
-            answText.config(fg='red', text='Неправильный ответ!', font=("Arial Bold", 14))
-            score -= 10
-    elif com == combo2:
-        if x == Que.answ:
-            answrd += 1
-            answered.append(Que)
-            quePrint()
+            self.answText.config(text='Начинаем!', fg='Gray')
+            self.btnAnsw.config(text='Проверить')
+
+        self.fr5.pack_forget()
+        self.fr6.pack_forget()
+
+        self.combo.pack_forget()
+        self.startBut.pack_forget()
+        self.autorLbl.pack_forget()
+        self.QueLbl.pack_forget()
+
+        self.main_frame()
+        self.que_print()
+
+    def main_frame(self):
+        self.fr1.pack(fill=X)
+        self.rad1.pack(side=LEFT, pady=5, padx=20)
+        self.rad2.pack(side=RIGHT, padx=20)
+
+        self.fr2.pack(fill=X)
+        self.rad3.pack(side=LEFT, pady=5, padx=20)
+        self.rad4.pack(side=RIGHT, padx=20)
+
+        self.fr3.pack(fill=BOTH, expand=True)
+        self.txt.pack(expand=True, padx=20, fill=BOTH)
+        
+        self.fr4.pack(fill=X)
+        self.answText.pack(pady=5)
+        self.btnAnsw.pack(fill=X, padx=20, ipady=5)
+
+        self.fr5.pack(fill=X, side=BOTTOM, pady=5)
+        self.autorLbl.pack(side=LEFT, padx=5)
+        self.QueLbl.pack(side=RIGHT, padx=5)
+
+    def que_print(self):
+        if len(self.Quest) == len(self.answered):
+            self.Vexit()
+            self.mode = 3
         else:
-            answered.append(Que)
-            quePrint()
-    else:
-        answered.append(Que)
-        quePrint()
+            self.que = random.choice(self.Quest)
 
-def mainFrame():
-    frame1.pack(fill=X)
+            while self.que in self.answered:
+                self.que = random.choice(self.Quest)
 
-    rad1.pack(side=LEFT, pady=5, padx=20)
-    rad2.pack(side=LEFT)
+            self.txt.config(state=NORMAL)
+            self.txt.delete(1.0, END)
+            self.txt.insert(0.0, self.que.QText)
+            self.txt.config(state=DISABLED)
+            print(self.que.answ)
 
-    frame2.pack(fill=X)
+    def check(self):
+        x = self.answer.get()
+        com = self.combo.get()
+        self.answer.set(0)
 
-    rad3.pack(side=LEFT, pady=5, padx=20)
-    rad4.pack(side=LEFT)
+        if com == self.combo1:
+            if x == self.que.answ:
+                self.answText.config(fg='green', text='Молодец!', font=("Arial Bold", 14))
+                self.answered.append(self.que)
+                self.score += 20
+                self.que_print()
+            else:
+                self.answText.config(fg='red', text='Неправильный ответ!', font=("Arial Bold", 14))
+                self.score -= 10
+        elif com == self.combo2:
+            if x == self.que.answ:
+                self.answrd += 1
+                self.answered.append(self.que)
+                self.que_print()
+            else:
+                self.answered.append(self.que)
+                self.que_print()
+        else:
+            self.answered.append(self.que)
+            self.que_print()
 
-    frame3.pack(fill=BOTH)
+    def new_que(self):
+        if self.mode == 1 or self.mode == 3:
+            if self.mode == 3:
+                self.FinishLbl.pack_forget()
+                self.returnBut.pack_forget()
+                self.main_frame()
 
-    txt.pack(expand=True, padx=20)
-    answText.pack(pady=5)
-    btnAnsw.pack()
+            self.mode = 2
+            self.answText.config(fg='Gray', text='Создание вопроса')
+            self.txt.config(insertontime=500, state=NORMAL)
+            self.txt.delete(1.0, END)
+            self.btnAnsw.config(text='Создать', command=self.create)
+
+    def edit(self):
+        if self.mode == 1:
+            self.lastcombo = self.combo.get()
+            self.mode = 4
+            self.answText.config(fg='Gray', text='Редактирование')
+            self.btnAnsw.config(text='Сохранить', command=self.create)
+            self.txt.config(insertontime=500, state=NORMAL)
+
+    def create(self):
+        x = self.answer.get()
+        self.answer.set(0)
+        xin = [1, 2, 3, 4]
+        if self.mode == 2:
+            if x in xin:
+                nQueT = self.txt.get(1.0, END)
+                nQueA = x
+                nQue = Question(nQueT, nQueA)
+
+                self.Quest.append(nQue)
+                QueLblTXT = 'Вопросы %i' % len(self.Quest)
+                self.QueLbl.config(text=QueLblTXT)
+                self.save('Save')
+
+                messagebox.showinfo('Adobe Showinfo', 'Вопрос создан!')
+            else:
+                self.answText.config(text='Выберите ответ!')
+
+        elif self.mode == 4:
+            if x in xin:
+                self.que.QText = self.txt.get(1.0, END)
+                self.que.answ = x
+                self.save('Save')
+                messagebox.showinfo('Adobe Showinfo', 'Вопрос изменен!')
+
+                if self.lastcombo == self.combo1 or self.lastcombo == self.combo2:
+                    self.btnAnsw.config(text='Проверить', command=self.check)
+                    self.answText.config(text='Начинаем!', fg='Gray')
+                elif self.lastcombo == self.combo3:
+                    self.btnAnsw.config(text='Далее', command=self.check)
+                    self.answText.config(text='Режим отладки', fg='Gray')
+                self.mode = 1
+            else:
+                self.answText.config(text='Выберите ответ!')
+
+    def delete(self):
+        if self.mode == 1:
+            self.Quest.remove(self.que)
+            QueLblTXT = 'Вопросы %i' % len(self.Quest)
+            self.QueLbl.config(text=QueLblTXT)
+            self.save('Save')
+
+            self.que_print()
+
+    def Vexit(self):
+        self.reset_all()
+        com = self.combo.get()
+
+        if len(self.Quest) == 0:
+            self.FinishLbl.config(font=("Arial Bold", 20), text='Вопросов нет\nСоздай их!\nВопросы -> Создать')
+        elif com == self.combo1:
+            self.FinishLbl.config(font=("Arial Bold", 20), text='Ты прошёл викторину!\nТвой счёт: %i' % self.score)
+        elif com == self.combo2:
+            self.FinishLbl.config(font=("Arial Bold", 20), text='Ты прошёл викторину!\nТы ответил на\n%i'
+                                                                ' вопроса(-ов) из %i' % (self.answrd, len(self.Quest)))
+        else:
+            self.FinishLbl.config(font=("Arial Bold", 20), text='Ты прошёл виктоину\nВ режиме отладки')
+
+        self.FinishLbl.pack(fill=X, pady=100, padx=20)
+        self.returnBut.pack(fill=X, padx=30)
+        self.fr5.pack(fill=X, side=BOTTOM, pady=5)
+        self.autorLbl.pack(side=LEFT, padx=5)
+        self.QueLbl.pack(side=RIGHT, padx=5)
+
+    def restart(self):
+        self.fr5.pack_forget()
+        self.FinishLbl.pack_forget()
+        self.returnBut.pack_forget()
+        self.autorLbl.pack_forget()
+        self.QueLbl.pack_forget()
+        self.answText.config(fg='Gray', text='Начинаем!')
+
+        self.answered = []
+        self.score = 0
+        self.answrd = 0
+
+        self.start_menu()
+
+    def restarti(self):
+        if self.mode == 2 or 1:
+            if self.mode == 2 or 4:
+                self.answText.config(fg='Gray', text='Начинаем!')
+                self.btnAnsw.config(text='Проверить', command=self.check)
+                self.txt.config(insertontime=0)
+
+            self.answered = []
+            self.score = 0
+            self.answrd = 0
+            self.reset_all()
+            self.start_menu()
+
+    def reset_all(self):
+        self.fr1.pack_forget()
+        self.fr2.pack_forget()
+        self.fr3.pack_forget()
+        self.fr4.pack_forget()
+        self.fr5.pack_forget()
+
+        self.rad1.pack_forget()
+        self.rad2.pack_forget()
+        self.rad3.pack_forget()
+        self.rad4.pack_forget()
+
+        self.txt.pack_forget()
+        self.btnAnsw.pack_forget()
+        self.answText.pack_forget()
+        self.autorLbl.pack_forget()
+        self.QueLbl.pack_forget()
+
+    def save(self, method):
+        file = None
+        if method == 'Save':
+            file = open('save.dat', 'wb')
+            pickle.dump(self.Quest, file)
+        elif method == 'Load':
+            file = open('save.dat', 'rb')
+            self.Quest = pickle.load(file)
+        file.close()
 
 
-def start():
-    global mode
-
-    mode = 1
-    com = combo.get()
-
-    if com == combo3:
-        answText.config(text='Режим отладки', fg = 'Gray')
-        btnAnsw.config(text='Далее')
-    else:
-        answText.config(text='Начинаем!', fg='Gray')
-        btnAnsw.config(text='Проверить')
-
-    combo.pack_forget()
-    startBut.pack_forget()
-
-    mainFrame()
-    quePrint()
-
-def Vexit():
-    global answrd
-
-    resetAll()
-
-    com = combo.get()
-
-    if len(Quest) == 0:
-        FinishLbl.config(font=("Arial Bold", 20), text='Вопросов нет\nСоздай их!\nВопросы -> Создать')
-        FinishLbl.pack(pady=100)
-        returnBut.pack()
-    elif com == combo1:
-        FinishLbl.config(font=("Arial Bold", 20), text='Ты прошёл викторину!\nТвой счёт: ' + str(score))
-        FinishLbl.pack(pady=100)
-        returnBut.pack()
-    elif com == combo2:
-        FinishLbl.config(font=("Arial Bold", 20), text='Ты прошёл викторину!\nТы ответил на\n' + str(answrd) +
-                         ' вопроса(-ов) из ' + str(len(Quest)))
-        FinishLbl.pack(pady=100)
-        returnBut.pack()
-    else:
-        FinishLbl.config(font=("Arial Bold", 20), text='Ты прошёл виктоину\nВ режиме отладки')
-        FinishLbl.pack(pady=100)
-        returnBut.pack()
-
-def restart():
-    global answered, score, answrd
-
-    FinishLbl.pack_forget()
-    returnBut.pack_forget()
-    answText.config(fg='Gray', text='Начинаем!')
-
-    answered = []
-    score = 0
-    answrd = 0
-
-    startMenu()
-
-def newQue():
-    global mode
-
-    if mode == 1:
-        mode = 2
-        answText.config(fg='Gray', text='Создание вопроса')
-        txt.delete(1.0, END)
-        btnAnsw.config(text='Создать', command=create)
-        txt.config(insertontime=500)
-
-def edit():
-    global mode
-
-    if mode == 1:
-        mode = 4
-        answText.config(fg='Gray', text='Редактирование')
-        btnAnsw.config(text='Сохранить', command=create)
-        txt.config(insertontime=500)
-
-def create():
-    global newQues
-
-    x = answer.get()
-    xin = [1, 2, 3, 4]
-    if mode == 2:
-        if x in xin:
-            nQueT = txt.get(1.0, END)
-            nQueA = answer.get()
-
-            nQue = Question(nQueT, nQueA)
-
-            Quest.append(nQue)
-
-            QueLblTXT = 'Вопросы ' + str(len(Quest))
-            QueLbl.config(text=QueLblTXT)
-
-            fileS = open('save.dat', 'wb')
-            pickle.dump(Quest, fileS)
-            fileS.close()
-
-            messagebox.showinfo('Adobe Showinfo', 'Вопрос создан!')
-
-    elif mode == 4:
-        if x in xin:
-            Que.QText = txt.get(1.0, END)
-            Que.answ = answer.get()
-
-            messagebox.showinfo('Adobe Showinfo', 'Вопрос изменен!')
-
-            fileS = open('save.dat', 'wb')
-            pickle.dump(Quest, fileS)
-            fileS.close()
-
-def delete():
-    if mode == 1:
-        Quest.remove(Que)
-
-        QueLblTXT = 'Вопросы ' + str(len(Quest))
-        QueLbl.config(text=QueLblTXT)
-
-        fileS = open('save.dat', 'wb')
-        pickle.dump(Quest, fileS)
-        fileS.close()
-
-        quePrint()
-
-def startMenu():
-    global mode
-
-    mode = 0
-
-    startBut.pack(pady=20)
-    combo.pack()
-
-def restarti():
-    global answered, score, answrd
-
-    if mode == 2 or 1:
-        if mode == 2 or 4:
-            answText.config(fg='Gray', text='Начинаем!')
-            btnAnsw.config(text='Проверить', command=check)
-            txt.config(insertontime=0)
-
-        answered = []
-        score = 0
-        answrd = 0
-        resetAll()
-        startMenu()
-
-def resetAll():
-    frame1.pack_forget()
-    frame2.pack_forget()
-    frame3.pack_forget()
-
-    rad1.pack_forget()
-    rad2.pack_forget()
-    rad3.pack_forget()
-    rad4.pack_forget()
-
-    txt.pack_forget()
-    btnAnsw.pack_forget()
-    answText.pack_forget()
-
-# Параметры окна
-window = Tk()
-window.geometry('360x480')
-window.title('Игра: Викторина!')
-window.iconbitmap('icon.ico')
-window.maxsize(360, 480)
-window.wm_minsize(360, 480)
-
-# Некоторые переменные
-font = 18
-answer = IntVar()
-answered = []
-score = 0
-combo1 = 'Автопроверка'
-combo2 = 'Проверка в конце'
-combo3 = 'Режим отладки'
-answrd = 0
-mode = 0    #Режим игры. 0 - стартовое меню, 1 - игра, 2 - создание вопроса, 3 - Финальное меню, 4 - редактирование
-
-# Задаём значение элементов
-frame1 = Frame(window)
-frame2 = Frame(window)
-frame3 = Frame(window)
-
-rad1 = Radiobutton(frame1, text='Вариант А', value=1, variable=answer, font=("Arial Bold", font))
-rad2 = Radiobutton(frame1, text='Вариант Б', value=2, variable=answer, font=("Arial Bold", font))
-rad3 = Radiobutton(frame2, text='Вариант В', value=3, variable=answer, font=("Arial Bold", font))
-rad4 = Radiobutton(frame2, text='Вариант Г', value=4, variable=answer, font=("Arial Bold", font))
-
-txt = Text(frame3, height=11, width=28, relief=FLAT, insertontime=0, font=("Arial", 15))
-
-btnAnsw = Button(window, width=22, text='Проверить', font=("Arial Bold", font), bg='Gray', command=check)
-startBut = Button(window, text='Нажми для начала!', font=("Arial Bold", font), width=16, height=8, bg='Red',
-                  command=start)
-
-returnBut = Button(window, text='Главное меню', bg='Green', fg='white', font=("Arial Bold", font), command=restart)
-
-answText = Label(frame3, font=("Arial Bold", 14), fg='Gray', text='Начинаем!')
-FinishLbl = Label(window)
-
-combo = Combobox(window)
-combo['values'] = (combo1, combo2, combo3)
-combo.current(0)
-
-menu = Menu(window)
-new_item = Menu(menu, tearoff=0)
-new_item.add_command(label='Новый вопрос', command=newQue)
-new_item.add_command(label='Редактировать', command=edit)
-new_item.add_command(label='Удалить вопрос', command=delete)
-menu.add_cascade(label='Вопросы', menu=new_item)
-menu.add_command(label='Главное меню', command=restarti)
-menu.add_command(label='Выход', command=sys.exit)
-window.config(menu=menu)
-
-autorLbl = Label(window, text='©Kirill Litvinov 2022', font=("Arial", 10))
-autorLbl.place(y=455, x=5)
-
-startMenu()
-
-#Вопросы
-file = open('save.dat', 'rb')
-Quest = pickle.load(file)
-file.close()
-
-QueLblTXT = 'Вопросы: ' + str(len(Quest))
-QueLbl = Label(window, text=QueLblTXT, font=("Arial", 10))
-QueLbl.place(y=455, x=355, anchor=NE)
-
-window.mainloop()
+if __name__ == '__main__':
+    GG = MainWindow()
