@@ -1,24 +1,23 @@
-import random
-from GameAI.GameFiles import GaMer
+from GameAI.GameFiles.AI import GaMer
+import time
 
 
-class Game:
+class GameTest:
 
-    def __init__(self, include):
-        self.AIInclude = include
+    def __init__(self):
         self.AI = GaMer()
-        self.tricnts = {'min': 0, 'max': 0, 'ers': 0}
         self.game()
 
     def game(self):
-        for x in range(100000000):
+        while True:
 
             answ = False
             tries = 8
             tricnt = 1
             last = 'start'
-            rand = random.randint(0, 100)
-            print('\nНайдите число от 0 до 100 за %i попыток' % tries)
+            rand = int(input('Загадайте число: '))
+            print('\nПрограмма найдёт число менее чем за 8 попыток')
+            time.sleep(1)
 
             while not answ:
                 if tries > 0:
@@ -30,31 +29,22 @@ class Game:
                     if a > rand:
                         print("Загаданное число меньше\n")
                         tries -= 1
+                        tricnt += 1
                         last = '<'
                     elif a < rand:
                         print('Загаданное число больше\n')
                         tries -= 1
+                        tricnt += 1
                         last = '>'
                     else:
                         print('Вы отгадали число!\n')
                         self.AI.reset()
                         answ = True
-                        self.triap(tricnt)
-                    tricnt += 1
                 else:
                     print('Попытки закончились\nЗагаданное число - ' + str(rand))
-                    self.tricnts['ers'] += 1
                     self.AI.reset()
                     answ = True
-
-        print(self.tricnts)
-
-    def triap(self, tricnt):
-        if tricnt > self.tricnts['max']:
-            self.tricnts['max'] = tricnt
-
-        if tricnt < self.tricnts['min']:
-            self.tricnts['min'] = tricnt
+            print('Прогрмма нашла число за %i попыток!' % tricnt)
 
 
 if __name__ == '__main__':

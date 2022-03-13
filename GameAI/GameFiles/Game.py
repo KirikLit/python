@@ -1,6 +1,6 @@
 import random
 import time
-from GameAI.GameFiles.AI import GaMer
+from .AI import GaMer
 
 
 class Game:
@@ -13,8 +13,7 @@ class Game:
     def game(self):
         while True:
             answ = False
-            tries = 20
-            ant = 0
+            tries = 8
             last = 'start'
             rand = random.randint(0, 100)
             print('\nНайдите число от 0 до 100 за %i попыток' % tries)
@@ -24,18 +23,17 @@ class Game:
                 if tries > 0:
                     print('Осталось попыток: %i' % tries)
                     if not self.AIInclude:
-                        a = input('Введите число: ')
+                        inp = int(input('Введите число: '))
                     else:
                         time.sleep(1)
-                        a = self.AI.get(last)
-                    print(a)
-                    ant = a
+                        inp = self.AI.get(last)
+                        print('Введённое число: %i' % inp)
 
-                    if a > rand:
+                    if inp > rand:
                         print("Загаданное число меньше\n")
                         tries -= 1
                         last = '<'
-                    elif a < rand:
+                    elif inp < rand:
                         print('Загаданное число больше\n')
                         tries -= 1
                         last = '>'
@@ -47,3 +45,7 @@ class Game:
                     print('Попытки закончились\nЗагаданное число - ' + str(rand))
                     self.AI.reset()
                     answ = True
+
+
+if __name__ == '__main__':
+    print('Это модуль для другой программы\nОткрой TestGameAI.py')
