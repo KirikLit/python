@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 from PIL import Image, ImageTk
+import tkinter.ttk as ttk
 import random
 
 
@@ -313,23 +314,24 @@ class SpecialSize(Toplevel):
         lbl1 = Label(fr1, font=('Segoe UI', 12), text='Ширина:')
         lbl2 = Label(fr2, font=('Segoe UI', 12), text='Высота:')
         lbl3 = Label(fr3, font=('Segoe UI', 12), text='Мины:')
+        ttk.Style().configure('TButton')
         self.lblEr = Label(self, font=('Segoe UI', 12), text='', fg='Red')
-        entBut = Button(self, text='OK', command=lambda: self.enter('e'), width=10)
+        entBut = ttk.Button(self, text='OK', command=lambda: self.enter('e'))
         self.bind('<Return>', self.enter)
 
-        self.entry1 = Entry(fr1, width=15, font=('Segoe UI', 12))
-        self.entry2 = Entry(fr2, width=15, font=('Segoe UI', 12))
-        self.entry3 = Entry(fr3, width=15, font=('Segoe UI', 12))
+        self.entry1 = ttk.Entry(fr1, width=15, font=('Segoe UI', 12))
+        self.entry2 = ttk.Entry(fr2, width=15, font=('Segoe UI', 12))
+        self.entry3 = ttk.Entry(fr3, width=15, font=('Segoe UI', 12))
 
-        fr1.pack(fill=X)
+        fr1.pack(fill=X, expand=True)
         lbl1.pack(side=LEFT)
         self.entry1.pack(side=RIGHT)
 
-        fr2.pack(fill=X, pady=10)
+        fr2.pack(fill=X, pady=10, expand=True)
         lbl2.pack(side=LEFT)
         self.entry2.pack(side=RIGHT)
 
-        fr3.pack(fill=X)
+        fr3.pack(fill=X, expand=True)
         lbl3.pack(side=LEFT)
         self.entry3.pack(side=RIGHT)
         
