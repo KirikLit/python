@@ -1,12 +1,17 @@
+import pickle
+import sys
+import time
 from tkinter import *
-from tkinter.ttk import Frame
 from tkinter import messagebox
 from tkinter.filedialog import *
-import pickle, time, sys
+import tkinter.ttk as ttk
+
 
 class Notes(Frame):
     def __init__(self):
         super().__init__()
+        self.note = None
+        self.notes = None
         self.menu = None
         self.pageLbl = None
         self.autorLbl = None
@@ -28,11 +33,11 @@ class Notes(Frame):
 
         fr1 = Frame(self)
         fr2 = Frame(self)
-        fr3 = Frame(self)
 
+        ttk.Style().configure('TButton', font=('Segoe UI', 16))
         self.clock = Label(fr1, font=('Times New Roman Bold', 40))
-        self.btnPrev = Button(fr1, text='Пред.', height=2, width=10, command=self.preNote, font=('Arial Bold', 15), bg='Gray')
-        self.btnNext = Button(fr1, text='След.', height=2, width=10, command=self.nextNote, font=('Arial Bold', 15), bg='Gray')
+        self.btnPrev = ttk.Button(fr1, text='Пред.', width=10, command=self.preNote)
+        self.btnNext = ttk.Button(fr1, text='След.', width=10, command=self.nextNote)
         self.txt = Text(fr2)
         self.autorLbl = Label(fr2, text='©Kirill Litvinov 2022')
         self.pageLbl = Label(fr2, anchor=NE)
@@ -102,7 +107,7 @@ class Notes(Frame):
 
     def exiting(self):
         x = messagebox.askyesno(title='Выход из программы', message='Вы хотите выйти?')
-        if x == True:
+        if x:
             self.save(self.note)
             sys.exit()
 
@@ -125,7 +130,7 @@ class Notes(Frame):
 
     def delAll(self):
         self.txt.delete(0.0, END)
-        self.notes =['']
+        self.notes = ['']
         self.note = 1
         self.prNote(self.note)
 
@@ -147,6 +152,7 @@ class Notes(Frame):
 
         tf.close()
 
+
 def main():
     window = Tk()
     window.geometry('800x600')
@@ -155,6 +161,7 @@ def main():
     window.protocol('WM_DELETE_WINDOW', app.exiting)
     window.config(menu=app.menu)
     window.mainloop()
+
 
 if __name__ == '__main__':
     main()
