@@ -94,7 +94,7 @@ class Bullet(pygame.sprite.Sprite):
     def __init__(self, posx, posy):
         pygame.sprite.Sprite.__init__(self)
 
-        # Making bullet
+        # Making bullet_img
         self.image = laser
 
         self.rect = self.image.get_rect()
