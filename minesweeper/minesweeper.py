@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
+from SweepEngine import *
 from PIL import Image, ImageTk
 import tkinter.ttk as ttk
 import random
@@ -19,11 +20,8 @@ class MainWindow(Tk):
         self.flag = ImageTk.PhotoImage(flagO.resize((20, 20)))
         
         # Списки
-        self.btns = []
         self.bombed = []
         self.frames = []
-        self.excl = []
-        self.excl2 = []
         self.colors = ['n', 'Blue', 'Green', 'Red', 'Darkgreen', 'Darkred', 'Black', 'Black']       # Цвета кнопок
         
         # Пустые переменные
@@ -31,18 +29,19 @@ class MainWindow(Tk):
         self.bombcount = None
         self.btnscount = None
         self.linelength = None
+        self.fl = None
         
         # Стандартные значения
-        self.bombcount2 = 80
-        self.btnscount2 = 480
-        self.linelength2 = 30
+        self.bombcount2 = 10
+        self.height2 = 9
+        self.linelength2 = 9
         
         # Меню
         menu = Menu(self)
         newitem = Menu(menu, tearoff=0)
-        newitem.add_command(label='Новичок', command=lambda: self.changegrid(81, 9, 10))
-        newitem.add_command(label='Любитель', command=lambda: self.changegrid(256, 16, 40))
-        newitem.add_command(label='Проффесионал', command=lambda: self.changegrid(480, 30, 80))
+        newitem.add_command(label='Новичок', command=lambda: self.changegrid(9, 9, 10))
+        newitem.add_command(label='Любитель', command=lambda: self.changegrid(16, 16, 40))
+        newitem.add_command(label='Проффесионал', command=lambda: self.changegrid(16, 30, 80))
         newitem.add_separator()
         newitem.add_command(label='Свой размер', command=self.special)
         menu.add_command(label='Новая игра', command=self.restartgame)
@@ -61,12 +60,11 @@ class MainWindow(Tk):
         # Создание кнопок
         self.losegamev = False
         self.bombcount = self.bombcount2
-        self.btnscount = self.btnscount2
+        self.btnscount = self.linelength2 * self.height2
         self.linelength = self.linelength2
         x = self.linelength
+        self.fl = Field(self.linelength, self.height2)
 
-        self.excl = []
-        self.excl2 = []
         tvar = self.linelength
         tvar2 = self.linelength
 
@@ -81,17 +79,15 @@ class MainWindow(Tk):
                 self.frames.append(fr)
                 x = 0
 
-            btn = MyButton(self, 0, 0, False, fr, y)
+            self.fl.set_class(y, MyButton, self, fr, y)
             x += 1
-
-            self.btns.append(btn)
 
         # Создание бомб
         for bombs in range(self.bombcount):
-            bomb = random.choice(self.btns)
+            bomb = random.choice(self.fl.list_field)
 
             while bomb in self.bombed:
-                bomb = random.choice(self.btns)
+                bomb = random.choice(self.fl.list_field)
 
             bomb.mine = 1
             self.bombed.append(bomb)
@@ -100,32 +96,19 @@ class MainWindow(Tk):
         BombText = 'Бомб: ' + str(self.bombCNT)
         self.bomblbl.config(text=BombText)
 
-        # Создание нужных списков
-        for x in range(self.linelength - 1, self.btnscount):
-            if tvar == self.linelength:
-                self.excl.append(x)
-                tvar = 0
-            tvar += 1
-
-        for x in range(0, self.btnscount):
-            if tvar2 == self.linelength:
-                self.excl2.append(x)
-                tvar2 = 0
-            tvar2 += 1
-
         # Проверка бомб
-        for btn in self.btns:
-            btn.check(self)
+        for btn in self.fl.list_field:
+            btn.check()
 
     def wingame(self):
         x = 0
 
-        for btn in self.btns:
+        for btn in self.fl.list_field:
             if btn.mine == 1 and btn.flag:
                 x += 1
 
         if x == self.bombcount:
-            for btn in self.btns:
+            for btn in self.fl.list_field:
                 btn.pressed()
             msg = messagebox.askyesno('Победа', 'Вы выиграли!\nХотите сыграть ещё раз?')
             if msg:
@@ -134,7 +117,7 @@ class MainWindow(Tk):
                 self.destroy()
 
     def losegame(self):
-        for btn in self.btns:
+        for btn in self.fl.list_field:
             btn.pressed()
         msg = messagebox.askyesno('Поражение', 'Вы проиграли!\nХотите сыграть ещё раз?')
         if msg:
@@ -143,20 +126,20 @@ class MainWindow(Tk):
             self.destroy()
 
     def restartgame(self):
-        for btn in self.btns:
+        for btn in self.fl.list_field:
             btn.btn.destroy()
         for frames in self.frames:
             frames.destroy()
-        self.btns = []
+        self.fl.list_field = []
         self.bombed = []
         self.frames = []
 
         self.frame.destroy()
         self.startgame()
 
-    def changegrid(self, btns, length, mines):
+    def changegrid(self, height, length, mines):
         self.bombcount2 = mines
-        self.btnscount2 = btns
+        self.height2 = height
         self.linelength2 = length
 
         self.restartgame()
@@ -166,34 +149,27 @@ class MainWindow(Tk):
 
 
 class MyButton:
-    def __init__(self, appb, mine, count, flag, disp, index):
-        self.mine = mine
-        self.count = count
-        self.flag = flag
+    def __init__(self, appb, disp, index):
+        self.mine = 0
+        self.count = 0
+        self.flag = False
         self.index = index
         self.app = appb
         self.opened = False
-
-        index = self.index
-        self.pos = [index - (self.app.linelength - 1), index - self.app.linelength, index - (self.app.linelength + 1),
-                    index + 1, index - 1, index + self.app.linelength, index + (self.app.linelength + 1),
-                    index + (self.app.linelength - 1)]
 
         self.btn = Button(disp, width=2, height=1, bg='Lightgray', command=self.pressed)
         self.btn.bind('<Button-3>', lambda e: self.pressed1(e))
         self.btn.pack(side=LEFT)
 
-    def check(self, appch):
-        index = self.index
-
+    def check(self):
         if self.mine == 1:
             return
-        for posi in self.pos:
-            oper = self.pos.index(posi)
-            if self.checking(index, oper):
-                slf = appch.btns[posi]
-                if slf.mine == 1:
-                    self.count += 1
+        for met in self.app.fl.positions:
+            slf = self.app.fl.get_near(met, self.index)
+            if not slf:
+                continue
+            elif slf.mine == 1:
+                self.count += 1
 
     def pressed(self):
         if not self.opened:
@@ -216,10 +192,11 @@ class MyButton:
                                     font=('Times Bold', 9), image='', width=2, height=1)
                 self.opened = True
         else:
-            for pos in self.pos:
-                oper = self.pos.index(pos)
-                if self.checking(self.index, oper):
-                    slf = self.app.btns[pos]
+            for pos in self.app.fl.positions:
+                slf = self.app.fl.get_near(pos, self.index)
+                if not slf:
+                    continue
+                else:
                     if not slf.opened:
                         slf.pressed()
                         if slf.mine == 1 and not slf.flag:
@@ -247,11 +224,12 @@ class MyButton:
                 self.app.wingame()
 
     def open(self):
-        for posi in self.pos:
-            oper = self.pos.index(posi)
+        for posi in self.app.fl.positions:
+            slf = self.app.fl.get_near(posi, self.index)
 
-            if self.checking(self.index, oper):
-                slf = self.app.btns[posi]
+            if not slf:
+                continue
+            else:
                 if not slf.opened:
                     if slf.mine == 1:
                         pass
@@ -263,37 +241,6 @@ class MyButton:
                         slf.btn.config(relief=SUNKEN, text=slf.count, fg=self.app.colors[slf.count],
                                        font=('Times Bold', 9), bg='White')
                         slf.opened = True
-
-    def checking(self, index, oper):
-        operation = [index > (self.app.linelength - 1), index > self.app.linelength,
-                     index < (self.app.btnscount - self.app.linelength)]
-
-        if oper == 0 and index not in self.app.excl:
-            if operation[0]:
-                return True
-        elif oper == 1 and operation[0]:
-            return True
-        elif oper == 2 and index not in self.app.excl2:
-            if operation[1]:
-                return True
-        elif oper == 3 and index not in self.app.excl:
-            return True
-        elif oper == 4 and index not in self.app.excl2:
-            return True
-        elif oper == 5 and operation[2]:
-            return True
-        elif oper == 6 and index not in self.app.excl:
-            if operation[2]:
-                return True
-            else:
-                return False
-        elif oper == 7 and index not in self.app.excl2:
-            if operation[2]:
-                return True
-            else:
-                return False
-        else:
-            return False
 
 
 class SpecialSize(Toplevel):
@@ -345,7 +292,7 @@ class SpecialSize(Toplevel):
 
         if (x1 * x2) > x3:
             if x1 > 2 and x2 < 40:
-                self.app.changegrid((x1 * x2), x1, x3)
+                self.app.changegrid(x2, x1, x3)
                 self.destroy()
             else:
                 self.lblEr.config(text='Неправильный размер')
