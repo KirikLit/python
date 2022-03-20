@@ -102,7 +102,7 @@ class CalcWin(Tk):
         else:
             if self.oper:
                 self.oper = False
-                self.entry2.delete(0, END)
+                self.printi(self.entry2, '')
                 if self.doubleop:
                     self.inti = '0'
                     self.lastdigit = '0'
@@ -118,7 +118,8 @@ class CalcWin(Tk):
         self.printi(self.entry, self.inti)
         print(self.inti)
 
-    def printi(self, entry, text):
+    @staticmethod
+    def printi(entry, text):
         entry.config(state=NORMAL)
         entry.delete(0, END)
         entry.insert(0, text)
